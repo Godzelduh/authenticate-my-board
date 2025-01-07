@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kandan client view</title>
+</head>
+<body>
+    <script>
+        async function login(username, password) {
+            const response = await fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                localStorage.setItem('token', data.token);
+                console.log('Login successful');
+            } else {
+                console.error('Login failed', data);
+            }
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No token found');
+            }
+
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+
+            return response.json();
+        }
+
+        // Example usage
+        async function getTickets() {
+            try {
+                const tickets = await fetchWithAuth('http://localhost:3000/tickets');
+                console.log('Tickets:', tickets);
+            } catch (error) {
+                console.error('Error fetching tickets:', error);
+            }
+        }
+
+        // Example login and fetch tickets
+        login('username', 'password').then(() => {
+            getTickets();
+        });
+    </script>
+</body>
+</html>
